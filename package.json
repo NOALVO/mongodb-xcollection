@@ -1,6 +1,6 @@
 {
   "name": "mongodb-xcollection",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "MongoDB extended collection class that frees you from ObjectID and other Extended JSON type conversions.",
   "main": "index.js",
   "scripts": {
@@ -10,8 +10,16 @@
     "type": "git",
     "url": "git+https://github.com/NOALVO/mongodb-xcollection.git"
   },
-  "keywords": ["mongodb","extended-json","bson","ext-json"],
-  "author": { "name": "Gustavo Gondim", "email": "gustavo@midianoalvo.com.br" },
+  "keywords": [
+    "mongodb",
+    "extended-json",
+    "bson",
+    "ext-json"
+  ],
+  "author": {
+    "name": "Gustavo Gondim",
+    "email": "gustavo@midianoalvo.com.br"
+  },
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/NOALVO/mongodb-xcollection/issues"
