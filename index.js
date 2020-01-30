@@ -1,3 +1,5 @@
+const XJSON = require('mongodb-extjson');
+
 class XCollection {
   constructor(mongodb, name, options) {
     let collectionName;
@@ -55,4 +57,4 @@ class XCollection {
 
 }
 
-module.exports = { XCollection };
+module.exports = XCollection;
