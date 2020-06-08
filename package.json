@@ -26,6 +26,8 @@
   },
   "homepage": "https://github.com/NOALVO/mongodb-xcollection#readme",
   "dependencies": {
+    "@apidevtools/json-schema-ref-parser": "^9.0.1",
+    "ajv": "^6.12.2",
     "mongodb-extjson": "~3.0.3"
   }
 }

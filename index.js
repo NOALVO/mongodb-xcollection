@@ -1,4 +1,6 @@
 const XJSON = require('mongodb-extjson');
+const Ajv = require('ajv');
+const RefParser = require("@apidevtools/json-schema-ref-parser");
 
 class XCollection {
   constructor(mongodb, name, options) {
@@ -17,6 +19,29 @@ class XCollection {
     this.schema = schema;
     this.mongodb = mongodb;
     this.collection = (mongodb.db || mongodb).collection(collectionName, options || null);
+
+    if (this.schema) {
+      this.ajv = new Ajv({
+        useDefaults: true,
+        coerceTypes: true,
+        allErrors: true,
+      });
+      this.schemaBundle = null;
+    }
+  }
+
+  async validate(data) {
+    if (!this.schema) return { valid: true };
+    if (!this.schemaBundle) {
+      this.schemaBundle = await RefParser.bundle(this.schema);
+    }
+    const validation = ajv.compile(this.schemaBundle);
+    const isValid = validation(data);
+    if (!isValid) {
+      const error = new Error('VALIDATION_ERROR');
+      error.errors = validation.errors;
+      throw error;
+    }
   }
 
   async xfunc(func, applyResult, ...args) {
@@ -48,9 +73,20 @@ class XCollection {
   async count(...args) { return this.op('count', ...args); }
   async find(...args) { return this.opx('find', x => x.toArray(), ...args); }
   async findOne(...args) { return this.op('find', ...args); }
-  async insert(...args) { return this.opx('insert', x => x.ops, ...args); }
-  async insertOne(...args) { return this.opx('insertOne', x => x.ops, ...args); }
-  async insertMany(...args) { return this.opx('insertMany', x => x.ops, ...args); }
+  async insert(...args) {
+    await this.validate(args[0]);
+    return this.opx('insert', x => x.ops, ...args);
+  }
+  async insertOne(...args) { 
+    await this.validate(args[0]);
+    return this.opx('insertOne', x => x.ops, ...args);
+  }
+  async insertMany(...args) { 
+    await this.validate(args[0]);
+    return this.opx('insertMany', x => x.ops, ...args);
+  }
+
+  // TODO: validar updates (problema de ser apenas um patch ou objeto com operações $set, $unset)
   async update(...args) { return this.opx('update', x => x.ops, ...args); }
   async updateMany(...args) { return this.opx('updateMany', x => x.ops, ...args); }
   async updateOne(...args) { return this.opx('updateOne', x => x.ops, ...args); }
