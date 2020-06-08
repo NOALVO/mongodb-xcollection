@@ -86,10 +86,13 @@ class XCollection {
     return this.opx('insertMany', x => x.ops, ...args);
   }
 
-  // TODO: validar updates (problema de ser apenas um patch ou objeto com operações $set, $unset)
+  // TODO: validar updates (problema de ser apenas um patch ou objeto com operações $set,)
   async update(...args) { return this.opx('update', x => x.ops, ...args); }
   async updateMany(...args) { return this.opx('updateMany', x => x.ops, ...args); }
   async updateOne(...args) { return this.opx('updateOne', x => x.ops, ...args); }
+
+  async deleteMany(...args) { return this.opx('deleteMany', x => x.deletedCount, ...args); }
+  async deleteOne(...args) { return this.opx('deleteOne', x => x.deletedCount, ...args); }
 
 }
 
