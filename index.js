@@ -1,4 +1,4 @@
-const XJSON = require('mongodb-extjson');
+const XJSON = require('bson').EJSON;
 const Ajv = require('ajv');
 const RefParser = require("@apidevtools/json-schema-ref-parser");
 
