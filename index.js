@@ -4,7 +4,6 @@ const RefParser = require("@apidevtools/json-schema-ref-parser");
 
 class XCollection {
   constructor(mongodb, nameOrOptions, options) {
-    console.log('arguments', arguments)
     let collectionName;
     let schema;
 
@@ -76,7 +75,7 @@ class XCollection {
   async aggregate(...args) { return this.opx('aggregate', x => x.toArray(), ...args); }
   async count(...args) { return this.op('count', ...args); }
   async find(...args) { return this.opx('find', x => x.toArray(), ...args); }
-  async findOne(...args) { return this.op('find', ...args); }
+  async findOne(...args) { return this.op('findOne', ...args); }
   async insert(...args) {
     await this.validate(args[0]);
     return this.opx('insert', x => x.ops, ...args);
