@@ -3,17 +3,21 @@ const Ajv = require('ajv');
 const RefParser = require("@apidevtools/json-schema-ref-parser");
 
 class XCollection {
-  constructor(mongodb, name, options) {
+  constructor(mongodb, nameOrOptions, options) {
+    console.log('arguments', arguments)
     let collectionName;
     let schema;
 
-    if (typeof name === 'string') {
-      collectionName = name;
-    } else if (name) {
-      options = name;
-      schema = JSON.parse(JSON.stringify(options.schema));
+    if (typeof nameOrOptions === 'string') {
+      collectionName = nameOrOptions;
+      if (options && options.schema) schema = options.schema;
+    } else if (nameOrOptions.$schema) {
+      schema = nameOrOptions;
       collectionName = schema.name;
-      delete options.schema;
+    } else if (nameOrOptions.schema) {
+      options = nameOrOptions;
+      collectionName = nameOrOptions.schema.name;
+      schema = nameOrOptions.schema;
     }
 
     this.schema = schema;
@@ -77,11 +81,11 @@ class XCollection {
     await this.validate(args[0]);
     return this.opx('insert', x => x.ops, ...args);
   }
-  async insertOne(...args) { 
+  async insertOne(...args) {
     await this.validate(args[0]);
     return this.opx('insertOne', x => x.ops, ...args);
   }
-  async insertMany(...args) { 
+  async insertMany(...args) {
     await this.validate(args[0]);
     return this.opx('insertMany', x => x.ops, ...args);
   }
