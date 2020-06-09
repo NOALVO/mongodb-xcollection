@@ -1,6 +1,6 @@
 {
   "name": "mongodb-xcollection",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "MongoDB extended collection class that frees you from ObjectID and other Extended JSON type conversions.",
   "main": "index.js",
   "scripts": {
