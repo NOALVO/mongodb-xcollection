@@ -2,6 +2,13 @@ const XJSON = require('bson').EJSON;
 const Ajv = require('ajv');
 const RefParser = require("@apidevtools/json-schema-ref-parser");
 
+function clean(object, ...props) {
+  props.forEach(prop => {
+    Reflect.deleteProperty(object, prop);
+  });
+  return object;
+}
+
 class XCollection {
   constructor(mongodb, nameOrOptions, options) {
     let collectionName;
@@ -38,7 +45,7 @@ class XCollection {
     if (!this.schemaBundle) {
       this.schemaBundle = await RefParser.bundle(this.schema);
     }
-    const validation = ajv.compile(this.schemaBundle);
+    const validation = this.ajv.compile(this.schemaBundle);
     const isValid = validation(data);
     if (!isValid) {
       const error = new Error('VALIDATION_ERROR');
@@ -48,10 +55,46 @@ class XCollection {
   }
 
   async xfunc(func, applyResult, ...args) {
-    args = args.map(a => a ? this.convertInput(a) : undefined);
-    const result = await func.call(this.collection, args[0], args[1], args[2], args[3], args[4], args[5], args[6]);
-    const toConvert = await (() => applyResult(result))();
-    return this.convertOutput(toConvert);
+    try {
+      args = args.map(a => a ? this.convertInput(a) : undefined);
+    } catch (error) {
+      const newError = new Error(`[XCollection] Inputs conversion error`);
+      newError.original = error.toString();
+      newError.data = { id: args[0] };
+      throw newError;
+    }
+    
+    let result = null;
+    try {
+      result = await func.call(this.collection, args[0], args[1], args[2], args[3], args[4], args[5], args[6]);
+    } catch (error) {
+      const newError = new Error(`[XCollection] Error calling func`);
+      newError.original = error.toString();
+      newError.data = { id: args[0] };
+      throw newError;
+    }
+
+    let toConvert = null;
+    try {
+      toConvert = await (() => applyResult(result))();
+    } catch (error) {
+      const newError = new Error(`[XCollection] applyResult error`);
+      newError.original = error.toString();
+      newError.data = { id: args[0], result };
+      throw newError;
+    }
+
+    let output = null;
+    try {
+      const isConvertible = (typeof toConvert === 'object') && (toConvert || null) !== null;
+      output = isConvertible ? this.convertOutput(toConvert) : toConvert;
+    } catch (error) {
+      const newError = new Error(`[XCollection] Output conversion error`);
+      newError.original = error.toString();
+      newError.data = { id: args[0], result, toConvert };
+      throw newError;
+    }
+    return output;
   }
 
   async op(opname, ...args) {
@@ -90,12 +133,12 @@ class XCollection {
   }
 
   // TODO: validar updates (problema de ser apenas um patch ou objeto com operações $set,)
-  async update(...args) { return this.opx('update', x => x.ops, ...args); }
-  async updateMany(...args) { return this.opx('updateMany', x => x.ops, ...args); }
-  async updateOne(...args) { return this.opx('updateOne', x => x.ops, ...args); }
+  async update(...args) { return this.opx('update', x => clean(x, 'result', 'connection'), ...args); }
+  async updateMany(...args) { return this.opx('updateMany', x => clean(x, 'result', 'connection'), ...args); }
+  async updateOne(...args) { return this.opx('updateOne', x => clean(x, 'result', 'connection'), ...args); }
 
-  async deleteMany(...args) { return this.opx('deleteMany', x => x.deletedCount, ...args); }
-  async deleteOne(...args) { return this.opx('deleteOne', x => x.deletedCount, ...args); }
+  async deleteMany(...args) { return this.opx('deleteMany', x => clean(x, 'result', 'connection'), ...args); }
+  async deleteOne(...args) { return this.opx('deleteOne', x => clean(x, 'result', 'connection'), ...args); }
 
 }
 
